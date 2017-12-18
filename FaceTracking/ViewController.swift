@@ -9,41 +9,13 @@
 import UIKit
 import AVFoundation
 
-class DetailsView: UIView {
-
-    lazy var detailsLabel: UILabel = {
-        let detailsLabel = UILabel(frame: CGRect(x: 0, y: 0, width: self.frame.size.width, height: self.frame.size.height))
-        detailsLabel.numberOfLines = 0
-        detailsLabel.textColor = .white
-        detailsLabel.font = UIFont.systemFont(ofSize: 18.0)
-        detailsLabel.textAlignment = .left
-       
-        return detailsLabel
-    }()
-    
-    func setup() {
-        layer.borderColor = UIColor.red.withAlphaComponent(0.7).cgColor
-        layer.borderWidth = 5.0
-  
-        addSubview(detailsLabel)
-    }
-    
-   override var frame: CGRect {
-        didSet(newFrame) {
-            var detailsFrame = detailsLabel.frame
-            detailsFrame = CGRect(x: 0, y: newFrame.size.height, width: newFrame.size.width * 2.0, height: newFrame.size.height / 2.0)
-            detailsLabel.frame = detailsFrame
-        }
-    }
-}
-
-
-class ViewController: UIViewController {
+final class ViewController: UIViewController {
 
     var session: AVCaptureSession?
     var stillOutput = AVCaptureStillImageOutput()
     var borderLayer: CAShapeLayer?
    
+    // 顔とかその他情報を表示するためのview
     let detailsView: DetailsView = {
         let detailsView = DetailsView()
         detailsView.setup()
@@ -51,6 +23,7 @@ class ViewController: UIViewController {
         return detailsView
     }()
     
+    // カメラの映像を画面に表示する為のレイヤー
     lazy var previewLayer: AVCaptureVideoPreviewLayer? = {
         var previewLay = AVCaptureVideoPreviewLayer(session: self.session!)
         previewLay?.videoGravity = AVLayerVideoGravityResizeAspectFill
@@ -58,12 +31,17 @@ class ViewController: UIViewController {
         return previewLay
     }()
     
-    lazy var frontCamera: AVCaptureDevice? = {
+    // カメラの定義
+    // positionをbackにすると通常モード
+    // frontにすると自撮りモード
+    lazy var backCamera: AVCaptureDevice? = {
         guard let devices = AVCaptureDevice.devices(withMediaType: AVMediaTypeVideo) as? [AVCaptureDevice] else { return nil }
         
         return devices.filter { $0.position == .front }.first
     }()
     
+    
+    // 顔認識オブジェクト
     let faceDetector = CIDetector(ofType: CIDetectorTypeFace, context: nil, options: [CIDetectorAccuracy : CIDetectorAccuracyLow])
     
     override func viewDidLayoutSubviews() {
@@ -90,31 +68,43 @@ class ViewController: UIViewController {
 extension ViewController {
 
     func sessionPrepare() {
+        
+        // まずはカメラ使うにはこいつが必要
         session = AVCaptureSession()
        
-        guard let session = session, let captureDevice = frontCamera else { return }
+        // セッションとカメラをセット
+        guard let session = session, let captureDevice = backCamera else { return }
         
+        // キャプチャの品質レベル、ビットレートなどのクオリティを設定
         session.sessionPreset = AVCaptureSessionPresetPhoto
         
         do {
+            // AVCaptureDeviceオブジェクトからデータをキャプチャするために使用するAVCaptureInputのサブクラスです。
+            // これを使用して、デバイスをAVCaptureSessionに繋ぎます。
             let deviceInput = try AVCaptureDeviceInput(device: captureDevice)
             session.beginConfiguration()
             
+            // セッションにカメラを入力機器として接続
             if session.canAddInput(deviceInput) {
                 session.addInput(deviceInput)
             }
             
+            // アウトプットの設定
             let output = AVCaptureVideoDataOutput()
             output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String : NSNumber(value: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)]
             
+            // 遅れてきたフレームは無視する
             output.alwaysDiscardsLateVideoFrames = true
         
             if session.canAddOutput(output) {
                 session.addOutput(output)
             }
             
+            // 設定をコミットする。
             session.commitConfiguration()
             
+            // フレームをキャプチャするためのサブスレッド用のシリアルキューを用意
+            // didOutputSampleBufferを呼ぶため用
             let queue = DispatchQueue(label: "output.queue")
             output.setSampleBufferDelegate(self, queue: queue)
             
@@ -125,22 +115,46 @@ extension ViewController {
 }
 
 extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
+    
+    
+    
+    /// キャプチャ中にずっと呼ばれる。
+    /// 新しいビデオフレームが書かれたら呼ばれる
+    ///
+    /// - Parameters:
+    ///   - captureOutput: <#captureOutput description#>
+    ///   - sampleBuffer: <#sampleBuffer description#>
+    ///   - connection: <#connection description#>
     func captureOutput(_ captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
+        
+        // サンプルバッファからピクセルバッファを取り出す
+        // ピクセルバッファをベースにCoreImageのCIImageオブジェクトを作成
+        // CIImageからUIImageを作成することができる
         let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
         let attachments = CMCopyDictionaryOfAttachments(kCFAllocatorDefault, sampleBuffer, kCMAttachmentMode_ShouldPropagate)
+        
+        // attachements無くても作れるけど、attachmentsは必要なのかどうかよくわからんなあ
         let ciImage = CIImage(cvImageBuffer: pixelBuffer!, options: attachments as! [String : Any]?)
         let options: [String : Any] = [CIDetectorImageOrientation: exifOrientation(orientation: UIDevice.current.orientation),
                                        CIDetectorSmile: true,
                                        CIDetectorEyeBlink: true]
+        
+        // facedetectorから顔の特徴を全部取得
         let allFeatures = faceDetector?.features(in: ciImage, options: options)
     
         let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer)
+        
+        // get the clean aperture
+        // the clean aperture is a rectangle that defines the portion of the encoded pixel dimensions
+        // that represents image data valid for display.
         let cleanAperture = CMVideoFormatDescriptionGetCleanAperture(formatDescription!, false)
         
         guard let features = allFeatures else { return }
         
         for feature in features {
             if let faceFeature = feature as? CIFaceFeature {
+                
+                // 顔の形を取得する
                 let faceRect = calculateFaceRect(facePosition: faceFeature.mouthPosition, faceBounds: faceFeature.bounds, clearAperture: cleanAperture)
                 let featureDetails = ["has smile: \(faceFeature.hasSmile)",
                     "has closed left eye: \(faceFeature.leftEyeClosed)",
@@ -202,9 +216,25 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
         return videoBox
     }
 
+    
+    /// 顔を取得する処理
+    ///
+    /// - Parameters:
+    ///   - facePosition: <#facePosition description#>
+    ///   - faceBounds: <#faceBounds description#>
+    ///   - clearAperture: <#clearAperture description#>
+    /// - Returns: <#return value description#>
     func calculateFaceRect(facePosition: CGPoint, faceBounds: CGRect, clearAperture: CGRect) -> CGRect {
         let parentFrameSize = previewLayer!.frame.size
+        
+        print("----------------parentFrameSize---------------------")
+        print(parentFrameSize)
+        
+        
         let previewBox = videoBox(frameSize: parentFrameSize, apertureSize: clearAperture.size)
+        
+        print("----------------previewBox.size---------------------")
+        print(previewBox.size)
         
         var faceRect = faceBounds
         

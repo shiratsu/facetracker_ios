@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		562F25C71FE3B92600CCEC4B /* DetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 562F25C61FE3B92600CCEC4B /* DetailsView.swift */; };
 		E5AB7BD21D9E92DA0079BE5B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5AB7BD11D9E92DA0079BE5B /* AppDelegate.swift */; };
 		E5AB7BD41D9E92DA0079BE5B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5AB7BD31D9E92DA0079BE5B /* ViewController.swift */; };
 		E5AB7BD71D9E92DA0079BE5B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E5AB7BD51D9E92DA0079BE5B /* Main.storyboard */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		562F25C61FE3B92600CCEC4B /* DetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailsView.swift; sourceTree = "<group>"; };
 		E5AB7BCE1D9E92DA0079BE5B /* FaceTracking.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FaceTracking.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E5AB7BD11D9E92DA0079BE5B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E5AB7BD31D9E92DA0079BE5B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -64,6 +66,7 @@
 				E5AB7BD81D9E92DA0079BE5B /* Assets.xcassets */,
 				E5AB7BDA1D9E92DA0079BE5B /* LaunchScreen.storyboard */,
 				E5AB7BDD1D9E92DA0079BE5B /* Info.plist */,
+				562F25C61FE3B92600CCEC4B /* DetailsView.swift */,
 			);
 			path = FaceTracking;
 			sourceTree = "<group>";
@@ -108,7 +111,7 @@
 				TargetAttributes = {
 					E5AB7BCD1D9E92DA0079BE5B = {
 						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = 27FAFL2WP5;
+						DevelopmentTeam = S56GZ64EWS;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -151,6 +154,7 @@
 			files = (
 				E5AB7BD41D9E92DA0079BE5B /* ViewController.swift in Sources */,
 				E5AB7BD21D9E92DA0079BE5B /* AppDelegate.swift in Sources */,
+				562F25C71FE3B92600CCEC4B /* DetailsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,7 +277,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 27FAFL2WP5;
+				DEVELOPMENT_TEAM = S56GZ64EWS;
 				INFOPLIST_FILE = FaceTracking/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -287,7 +291,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = 27FAFL2WP5;
+				DEVELOPMENT_TEAM = S56GZ64EWS;
 				INFOPLIST_FILE = FaceTracking/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -316,6 +320,7 @@
 				E5AB7BE21D9E92DA0079BE5B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
